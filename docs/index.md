@@ -129,9 +129,13 @@ super blocks = *[size of installation, total counter size of filem, free data bl
 
 In Secondary Storage inode versus IN Primary storage Inode 
  **Secondary Storage Inode** <=> 
+ 
  *[ security, reg ||dir || other, modification time of file, modification of inode, size of file, addresses of the blocks on disk, ownership  ]* 
+ 
  **In Primary storage Inode** <=>
+ 
  [ isLocked, areProcessWaiting, isFileChanged, dev, inode integer + pointers + reference counter ] 
+ 
  *What it means for an indoe to be free?*
  
   if ( ref count >= 0 ), not in free list, but just unlocked - 
@@ -161,6 +165,7 @@ Indirection Level 3 : 12 [ Double Indirect Pointer ]
 
  - Get the inode from primary memory [ the inode number ] 
  - Find an inode with refCount = 0 
+ 
  - **iget** I/P inode # O/P locked inode 
 	 - Find if in inode in inode cache, check until inode is not locked anymore. 
 	 - [ Unlocked inode does not mean inode is free ] 
@@ -168,29 +173,33 @@ Indirection Level 3 : 12 [ Double Indirect Pointer ]
 	 - <> if not in inode cache, Not a method of knowing if no inode is in free list
 	 - <> traverse inode free list, find free inode, read disk copy of inode, bread, init inode, reset inode. 
 	 - return the inode struct 
+	 
  - **iput** I/P release the inode 
 	 - lock inode, refCount--, [ Why lock inode is befroe decrease refCount]
 	 - Check refCount = 0  -> check if inode modified [ change secondary inode ] 
 	 - Put into the free list, unlock the inode 
 	 ![enter image description here](https://i.ytimg.com/vi/CtJYQsEN6CY/maxresdefault.jpg)
+	 
 https://www.kernel.org/doc/htmldocs/filesystems/API-iput.html
 
 
 ## Representing directories 
 
 inode's type - a special type of file [ Indirection ] !! 
-Directore <=> [ <inode, file name > , < inode, file name> , < inode, file name > ] 
+
+Directory  <=> [ <inode, file name > , < inode, file name> , < inode, file name > ] 
+
 *Quiz:* How do you open a file, what minimum arguments you need to specify? 
 
 **namei** 
 
- - [ ] check if part starts from root and update current  inode to root's inode. 
+ - [ ]   check if part starts from root and update current  inode to root's inode. 
  - [ ]   update current inode to current directory inode
- - [ ]  Keep traversing  the path name string, until the string for the pathname is valid.
- - [ ] Maintain the permission for search, read directory. get inode # for  the matched substring directory name,
- - [ ] *release* current inode,     update the current inode to the new matched substring directory name.  
- - [ ] return null if all the substrings are evaluated, or return null if a  substring does not have an entry while searching.
- - [ ] return the valid inode, if reached.
+ - [ ]   Keep traversing  the path name string, until the string for the pathname is valid.
+ - [ ]   Maintain the permission for search, read directory. get inode # for  the matched substring directory name,
+ - [ ]  *release* current inode,     update the current inode to the new matched substring directory name.  
+ - [ ]  return null if all the substrings are evaluated, or return null if a  substring does not have an entry while searching.
+ - [ ]  return the valid inode, if reached.
 
  https://man7.org/linux/man-pages/man1/namei.1.html
  
@@ -218,16 +227,17 @@ _What happens when a file is closed_?
     -  if ( f < r ) { r becomes f } ( only if the superblock free inode list is full ) 
     - increment free inodes counter, check for superblock is _not_ locked
     - store f in super block free inode list ( only if superblock free inode list is not full )
-    - 
 
 
 # On change of content in files 
   
 ![enter image description here](https://www.cems.uwe.ac.uk/~irjohnso/coursenotes/lrc/internals/images/fs2.gif)
+
+
 _Quiz_ : Why cannot one can use simply a bit to donate if the data block is free or not, but one can donate if an inode is free?
 
 - This is _mkfs_ does or making a file system on a disk. ^^  [ Why 172, 171 block # adjacent ] 
--  See left most entries in each of the linked list node **link block**  ^^
+- see left most entries in each of the linked list node **link block**  ^^
 - _Number of block numbers keep getting reduced as the machine runs and process keep writing data_
 - Copy the content, fully of 230 into the upper list _super block free data list_, makes 230 as free
 - **alloc** I/P - file system number , O/P is a buffer (getblk - first time in buffer cache )
